@@ -20,8 +20,7 @@ confidentiality, integrity, or authenticity guarantees.
 ## Intended use
 
 Learning Goose systems programming: byte slices, CLI args, file I/O, base64
-encoding/decoding, and project structure. Roadmap step 3 explores C interop via
-`extern fn`, but even a C-backed stream cipher here would remain demo-grade.
+encoding/decoding, and project structure.
 
 ## Reporting
 
