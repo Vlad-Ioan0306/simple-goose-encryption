@@ -23,6 +23,23 @@ fn parse_mode(args: u8[:][>..]) -> Mode, bool {
     return Mode.Encrypt, false;
 }
 
+fn strip_padding(s: const u8[:]) -> u8[>..] {
+    var out: u8[>..] = [];
+    for c in s {
+        if c != '=' { out.push(c); }
+    }
+    return out;
+}
+
+fn add_padding(s: const u8[:]) -> u8[>..] {
+    var out: u8[>..] = [];
+    for c in s { out.push(c); }
+    while out.len % 4 != 0 {
+        out.push('=');
+    }
+    return out;
+}
+
 fn main() {
     let args = args();
     let mode, ok = parse_mode(copy(args));
@@ -72,11 +89,13 @@ fn main() {
             let enc = encrypt::crypt(line, key);
             let enc_text: u8[>..] = [];
             base64::encode(enc_text, enc);
-            write_stdout(enc_text);
+            let clean = strip_padding(enc_text);
+            write_stdout(clean);
         },
         Decrypt => {
+            let padded = add_padding(line);
             var raw: u8[>..] = [];
-            if !base64::decode(raw, line) {
+            if !base64::decode(raw, padded) {
                 write_stderr("Invalid base64 input\n");
                 exit(1);
             }
