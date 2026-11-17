@@ -58,17 +58,5 @@ overwritten with a new random seed.
 ```
 src/main.goose   # entry point: CLI, seed handling, encrypt/decrypt pipeline
 src/encrypt.goose# XOR stream cipher (key-seeded xorshift keystream)
-ROADMAP.md       # planned steps 1–9 (scaffold → polish)
 LICENSE          # MIT
 ```
-
-## Roadmap Status
-
-| Step | Status |
-|------|--------|
-| 1. Scaffold | Done |
-| 2. XOR cipher | Done |
-| 3. Stream cipher / C interop | Planned |
-| 4–9. File I/O, CLI, tests, benchmark, security notes, polish | Partial/Planned |
-
-See `ROADMAP.md` for details.
