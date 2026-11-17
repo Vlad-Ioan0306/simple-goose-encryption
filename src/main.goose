@@ -14,6 +14,25 @@ fn parse_u16(s: const u8[:]) -> u16, bool {
     return value, true;
 }
 
+fn u16_to_string(v: u16) -> u8[>..] {
+    if v == 0 {
+        var out: u8[>..] = [];
+        out.push('0');
+        return out;
+    }
+    var temp: u8[>..] = [];
+    var n:    u16     = v;
+    while n > 0 {
+        temp.push((('0') + (n % 10)) as u8);
+        n = n / 10;
+    }
+    var out: u8[>..] = [];
+    for i in 0..temp.len {
+        out.push(temp[temp.len - 1 - i]);
+    }
+    return out;
+}
+
 fn parse_mode(args: u8[:][>..]) -> Mode, bool {
     if args.len < 2 { return Mode.Encrypt, false; }
 
@@ -44,35 +63,37 @@ fn main() {
     let args = args();
     let mode, ok = parse_mode(copy(args));
     if !ok {
-        write_stderr("Usage: file-encryptor --encrypt|--decrypt [-seed <seed>]\n");
+        write_stderr("Usage: file-encryptor --encrypt|--decrypt\n");
         exit(1);
     }
 
-    var seed:     u16  = 0;
-    var seed_set: bool = false;
-    var i:        i64  = 2;
-    while i < args.len {
-        if args[i] == "--seed" {
-            if i + 1 >= args.len {
-                write_stderr("Missing seed value\n");
+    var seed: u16 = 0;
+
+    match mode {
+        Encrypt => {
+            seed = encrypt::generate_seed();
+            let seed_text = u16_to_string(seed);
+            if !write_file(".seed", seed_text) {
+                write_stderr("Failed to write seed file\n");
                 exit(1);
             }
-            let parsed, ok = parse_u16(args[i + 1]);
+            print("Generated seed: ");
+            print(seed_text);
+            print("\n");
+        },
+        Decrypt => {
+            var seed_text: u8[>..] = [];
+            if !read_file(".seed", seed_text) {
+                write_stderr("No .seed file found. Run --encrypt first to generate a seed.\n");
+                exit(1);
+            }
+            let parsed, ok = parse_u16(seed_text);
             if !ok {
-                write_stderr("Invalid seed\n");
+                write_stderr("Invalid seed in .seed file\n");
                 exit(1);
             }
             seed = parsed;
-            seed_set = true;
-            i = i + 2;
-        } else {
-            write_stderr("Unknown argument\n");
-            exit(1);
-        }
-    }
-
-    if !seed_set {
-        seed = encrypt::generate_seed();
+        },
     }
 
     let key = encrypt::generate_key(seed);
