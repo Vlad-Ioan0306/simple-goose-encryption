@@ -1,1 +1,11 @@
+# Compiled binary (from `goose build`)
+file-encryptor
+
+# Object files
+*.o
+
+# Build output directory
+build/
+
+# ROADMAP
 ROADMAP.md
