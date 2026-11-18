@@ -74,3 +74,20 @@ fn parse_seed_pair(s: const u8[:]) -> u64, u64, bool {
 
     return a, b, true;
 }
+
+fn strip_padding(s: const u8[:]) -> u8[>..] {
+    var out: u8[>..] = [];
+    for c in s {
+        if c != '=' { out.push(c); }
+    }
+    return out;
+}
+
+fn add_padding(s: const u8[:]) -> u8[>..] {
+    var out: u8[>..] = [];
+    for c in s { out.push(c); }
+    while out.len % 4 != 0 {
+        out.push('=');
+    }
+    return out;
+}

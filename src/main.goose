@@ -15,23 +15,6 @@ fn parse_mode(args: u8[:][>..]) -> Mode, bool {
     return Mode.Encrypt, false;
 }
 
-fn strip_padding(s: const u8[:]) -> u8[>..] {
-    var out: u8[>..] = [];
-    for c in s {
-        if c != '=' { out.push(c); }
-    }
-    return out;
-}
-
-fn add_padding(s: const u8[:]) -> u8[>..] {
-    var out: u8[>..] = [];
-    for c in s { out.push(c); }
-    while out.len % 4 != 0 {
-        out.push('=');
-    }
-    return out;
-}
-
 fn main() {
     let args = args();
     let mode, ok = parse_mode(copy(args));
