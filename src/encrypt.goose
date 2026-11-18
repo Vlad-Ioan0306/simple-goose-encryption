@@ -1,8 +1,5 @@
 namespace encrypt;
 
-import os;
-import std;
-
 fn generate_seed() -> u64, u64 {
     let seed0: u64 = random_seed();
     let seed1: u64 = random_seed();
