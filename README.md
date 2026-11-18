@@ -34,29 +34,32 @@ The compiler is `build/goose`. On Linux, `goose build` also needs a C compiler
 goose run src/main.goose --encrypt
 
 # Optimized binary (system C compiler)
-goose build src/main.goose
+goose build src/main.goose -o file-encryptor
 ./file-encryptor --encrypt
 ```
 
 ## Usage
 
 ```
-file-encryptor --encrypt
-file-encryptor --decrypt
+./file-encryptor --encrypt
+./file-encryptor --decrypt
 ```
 
-- `--encrypt`: reads a line of text, encrypts it with a randomly generated seed, prints
-  base64 ciphertext (no `=` padding), and saves the seed to `.seed` in the current
-  directory.
-- `--decrypt`: reads the seed from `.seed`, expects base64 input, prints the plaintext.
+- `--encrypt`: reads a line of text, generates two random `u64` seeds (128-bit seed space)
+  plus a random `u64` nonce, prints the seed pair and nonce, writes the seed pair to `.seed`
+  in the current directory, and prints base64 ciphertext (no `=` padding) with the 8-byte
+  nonce prepended.
+- `--decrypt`: reads the seed pair from `.seed`, expects base64 input with the nonce
+  prepended, extracts the nonce, and prints the plaintext.
 
-The same seed is required on both sides. If you run `--encrypt` again, `.seed` is
-overwritten with a new random seed.
+The same seed pair is required on both sides. If you run `--encrypt` again, `.seed` is
+overwritten with a new random seed pair. The nonce is not secret — it travels with the
+ciphertext — but must be unique per encryption; do not reuse it.
 
 ## Project Layout
 
 ```
-src/main.goose   # entry point: CLI, seed handling, encrypt/decrypt pipeline
+src/main.goose   # entry point: CLI, seed/nonce handling, encrypt/decrypt pipeline
 src/encrypt.goose# XOR stream cipher (key-seeded xorshift keystream)
 LICENSE          # MIT
 ```
