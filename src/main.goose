@@ -4,9 +4,9 @@ import base64;
 
 enum Mode { Encrypt, Decrypt }
 
-fn parse_u16(s: const u8[:]) -> u16, bool {
+fn parse_u64(s: const u8[:]) -> u64, bool {
     if s.len == 0 { return 0, false; }
-    var value: u16 = 0;
+    var value: u64 = 0;
     for c in s {
         if c < '0' || c > '9' { return 0, false; }
         value = value * 10 + (c - '0');
@@ -14,14 +14,14 @@ fn parse_u16(s: const u8[:]) -> u16, bool {
     return value, true;
 }
 
-fn u16_to_string(v: u16) -> u8[>..] {
+fn u64_to_string(v: u64) -> u8[>..] {
     if v == 0 {
         var out: u8[>..] = [];
         out.push('0');
         return out;
     }
     var temp: u8[>..] = [];
-    var n:    u16     = v;
+    var n:    u64     = v;
     while n > 0 {
         temp.push((('0') + (n % 10)) as u8);
         n = n / 10;
@@ -31,6 +31,34 @@ fn u16_to_string(v: u16) -> u8[>..] {
         out.push(temp[temp.len - 1 - i]);
     }
     return out;
+}
+
+fn parse_seed_pair(s: const u8[:]) -> u64, u64, bool {
+    var i: u64 = 0;
+
+    while i < s.len && (s[i] < '0' || s[i] > '9') { i = i + 1; }
+
+    var a: u64 = 0;
+    var found_a: bool = false;
+    while i < s.len && s[i] >= '0' && s[i] <= '9' {
+        a = a * 10 + (s[i] - '0');
+        found_a = true;
+        i = i + 1;
+    }
+    if !found_a { return 0, 0, false; }
+
+    while i < s.len && (s[i] < '0' || s[i] > '9') { i = i + 1; }
+
+    var b: u64 = 0;
+    var found_b: bool = false;
+    while i < s.len && s[i] >= '0' && s[i] <= '9' {
+        b = b * 10 + (s[i] - '0');
+        found_b = true;
+        i = i + 1;
+    }
+    if !found_b { return 0, 0, false; }
+
+    return a, b, true;
 }
 
 fn parse_mode(args: u8[:][>..]) -> Mode, bool {
@@ -67,18 +95,26 @@ fn main() {
         exit(1);
     }
 
-    var seed: u16 = 0;
+    var seed0: u64 = 0;
+    var seed1: u64 = 0;
 
     match mode {
         Encrypt => {
-            seed = encrypt::generate_seed();
-            let seed_text = u16_to_string(seed);
+            let s0, s1 = encrypt::generate_seed();
+            seed0 = s0;
+            seed1 = s1;
+            var seed_text: u8[>..] = [];
+            for c in u64_to_string(seed0) { seed_text.push(c); }
+            seed_text.push(' ');
+            for c in u64_to_string(seed1) { seed_text.push(c); }
             if !write_file(".seed", seed_text) {
                 write_stderr("Failed to write seed file\n");
                 exit(1);
             }
             print("Generated seed: ");
-            print(seed_text);
+            print(u64_to_string(seed0));
+            print(" ");
+            print(u64_to_string(seed1));
             print("\n");
         },
         Decrypt => {
@@ -87,16 +123,15 @@ fn main() {
                 write_stderr("No .seed file found. Run --encrypt first to generate a seed.\n");
                 exit(1);
             }
-            let parsed, ok = parse_u16(seed_text);
+            let s0, s1, ok = parse_seed_pair(seed_text);
             if !ok {
                 write_stderr("Invalid seed in .seed file\n");
                 exit(1);
             }
-            seed = parsed;
+            seed0 = s0;
+            seed1 = s1;
         },
     }
-
-    let key = encrypt::generate_key(seed);
 
     print("Please enter the text: ");
     var line: u8[>..] = [];
@@ -107,7 +142,7 @@ fn main() {
 
     match mode {
         Encrypt => {
-            let enc = encrypt::crypt(line, key);
+            let enc = encrypt::crypt(line, seed0, seed1);
             let enc_text: u8[>..] = [];
             base64::encode(enc_text, enc);
             let clean = strip_padding(enc_text);
@@ -120,7 +155,7 @@ fn main() {
                 write_stderr("Invalid base64 input\n");
                 exit(1);
             }
-            let dec = encrypt::crypt(raw, key);
+            let dec = encrypt::crypt(raw, seed0, seed1);
             write_stdout(dec);
         },
     }

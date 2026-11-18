@@ -3,26 +3,34 @@ namespace encrypt;
 import os;
 import std;
 
-fn generate_seed() -> u16 {
-    let seed: u16 = random_seed() as u16;
-    return seed;
+fn generate_seed() -> u64, u64 {
+    let seed0: u64 = random_seed();
+    let seed1: u64 = random_seed();
+    return seed0, seed1;
 }
 
-fn generate_key(seed: const u16) -> u64 {
-    let r = rng { s: seed };
-    let key: u64 = rand_u64(r);
-    return key;
-}
-
-fn crypt(data: const u8[:], key: const u64) -> u8[>..] {
-    var state: u64     = key;
+fn crypt(data: const u8[:], seed0: const u64, seed1: const u64) -> u8[>..] {
+    var state0: u64 = seed0;
+    var state1: u64 = seed1;
     var out:   u8[>..] = [];
 
+    if state0 == 0 { state0 = 1; }
+    if state1 == 0 { state1 = 1; }
+
+    state1 = state1 ^ (state1 << 13);
+    state1 = state1 ^ (state1 >> 7);
+    state1 = state1 ^ (state1 << 17);
+
     for c in data {
-        state = state ^ (state << 13);
-        state = state ^ (state >> 7);
-        state = state ^ (state << 17);
-        let ks: const u8 = state as u8;
+        state0 = state0 ^ (state0 << 13);
+        state0 = state0 ^ (state0 >> 7);
+        state0 = state0 ^ (state0 << 17);
+
+        state1 = state1 ^ (state1 << 13);
+        state1 = state1 ^ (state1 >> 7);
+        state1 = state1 ^ (state1 << 17);
+
+        let ks: const u8 = (state0 ^ state1) as u8;
         out.push(c ^ ks);
     }
 
