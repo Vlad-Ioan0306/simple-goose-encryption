@@ -4,8 +4,8 @@
 
 This project is an **educational demo only**. The encryption used is a toy-grade
 XOR stream cipher seeded by two `u64` values (128-bit seed space) with a per-message
-`u64` nonce. It provides no confidentiality, integrity, or authenticity guarantees
-against a determined attacker.
+`u64` nonce. A single `u64` `--key` may be supplied for both states. It provides no
+confidentiality, integrity, or authenticity guarantees against a determined attacker.
 
 **Do not use this to encrypt anything you need to keep private.**
 
@@ -20,6 +20,8 @@ against a determined attacker.
   keystream by XORing two ciphertexts together.
 - No authentication (MAC/signature) — ciphertext can be modified undetected.
 - No key derivation, salting, or stretching.
+- Files are processed in 64 KB chunks; each chunk is xored with the same keystream
+  continuation, so chunk boundaries do not reset the cipher state.
 
 ## Intended use
 
