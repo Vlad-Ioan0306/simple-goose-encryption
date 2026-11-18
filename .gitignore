@@ -1,6 +1,10 @@
 # Compiled binary (from `goose build`)
 file-encryptor
 
+# Compiled test binary
+src/main
+main
+
 # Object files
 *.o
 

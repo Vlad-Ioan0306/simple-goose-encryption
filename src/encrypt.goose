@@ -9,9 +9,9 @@ fn generate_seed() -> u64, u64 {
     return seed0, seed1;
 }
 
-fn crypt(data: const u8[:], seed0: const u64, seed1: const u64) -> u8[>..] {
-    var state0: u64 = seed0;
-    var state1: u64 = seed1;
+fn crypt(data: const u8[:], seed0: const u64, seed1: const u64, nonce: const u64) -> u8[>..] {
+    var state0: u64 = seed0 ^ nonce;
+    var state1: u64 = seed1 ^ nonce;
     var out:   u8[>..] = [];
 
     if state0 == 0 { state0 = 1; }
